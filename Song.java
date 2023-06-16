@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 public class Song implements Cloneable {
     final private String name;
     final private String artist;
@@ -26,8 +28,9 @@ public class Song implements Cloneable {
             return null;
         }
     }
-
-
+    public int hashCode() {
+        return Objects.hash(name, artist, genre, duration);
+    }
 
     public enum Genre {
         POP, ROCK, HIP_HOP, COUNTRY, JAZZ, DISCO;
@@ -40,12 +43,12 @@ public class Song implements Cloneable {
     public String toString() {
         int minutes = duration/60;
         int seconds =  duration - minutes*60;
-        String songString = "(" + name +", " + artist + ", " + genre +", " + minutes + ":";
+        String songString = name +", " + artist + ", " + genre +", " + minutes + ":";
         if(seconds < 10){
-           return songString + 0 + seconds + ")";
+           return songString + 0 + seconds;
         }
         else{
-            return songString  + seconds + ")";
+            return songString  + seconds;
         }
     }
 }

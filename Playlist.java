@@ -58,15 +58,15 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
     public String toString() {
         String stringPlaylist = "[";
         if(songCount == 0){
-            return stringPlaylist + "]";
+            return "(" +  stringPlaylist + ")" + "]";
         }
         int counter = 0;
         while(counter < songCount-1){
-            stringPlaylist += songList.get(counter) + ", ";
+            stringPlaylist += "("+ songList.get(counter) +")"+ ", ";
             counter++;
         }
 
-        return stringPlaylist += songList.get(counter) + "]";
+        return stringPlaylist += "(" + songList.get(counter) + ")" +  "]";
 
     }
 
@@ -108,11 +108,43 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
         }
     }
 
-
-
+    public int getSongCount() {
+        return songCount;
+    }
 
     @Override
-    public Iterator<Song> iterator() {
+    public boolean equals(Object other) {
+        if (!(other instanceof Playlist)) {
+            return false;
+        }
+        Playlist otherPlaylist = (Playlist) other;
+        if(songCount!= otherPlaylist.getSongCount()){
+            return false;
+        }
+        for(int i = 0; i < songCount; i++){
+            Song currentSong = songList.get(i);
+            Optional<Integer> pairLocation = otherPlaylist.songLocation(currentSong);
+            if (!(pairLocation.isPresent())){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCodeSum = 0;
+        PlaylistIterator iterator = new PlaylistIterator();
+        while (iterator.hasNext()){
+            Song currentSong = iterator.next();
+            hashCodeSum += currentSong.hashCode();
+        }
+        return hashCodeSum;
+    }
+
+    @Override
+    public PlaylistIterator iterator() {
         return new PlaylistIterator();
     }
 
@@ -132,7 +164,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
         public Song next() {
             return songList.get(currentSongIndex++);
         }
-        private void setStartingPoint(){currentSongIndex = 0;}
+        private void reset(){currentSongIndex = 0;}
 
     }
 }
