@@ -1,9 +1,11 @@
-import java.util.Iterator;
-import java.util.Spliterator;
-import java.util.function.Consumer;
+/**
+ * This interface is used to define a restriction on a data structure that houses song
+ * while  it has to support being able to be iterated over while filtering with certain filters
+ *
+ */
 
 public interface FilteredSongIterable extends Iterable<Song>{
-    public void filterArtist(String artist);
-    public void filterGenre(Song.Genre genre);
-    public void filterDuration(int durationLimit);
+    void filterArtist(String artist);
+    void filterGenre(Song.Genre genre);
+    void filterDuration(int durationLimit);
 }
