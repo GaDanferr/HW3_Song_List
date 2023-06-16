@@ -2,7 +2,7 @@
 public class Song implements Cloneable {
     final private String name;
     final private String artist;
-    final private Genre genre; //should these be private?
+    final private Genre genre;
     private int duration;
     public Song(String name , String artist , Genre genre , int duration){
         this.name = name;
@@ -10,7 +10,7 @@ public class Song implements Cloneable {
         this.genre = genre;
         this.duration = duration;
     }
-    public boolean equals(Object other){     // iff song name and artist
+    public boolean equals(Object other){
 
         if(!(other instanceof  Song)){
             return false;
