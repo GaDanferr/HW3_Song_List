@@ -1,4 +1,3 @@
-import java.util.Objects;
 
 public class Song implements Cloneable {
     final private String name;
@@ -29,11 +28,11 @@ public class Song implements Cloneable {
         }
     }
     public int hashCode() {
-        return Objects.hash(name, artist, genre, duration);
+        return name.hashCode() + artist.hashCode();
     }
 
     public enum Genre {
-        POP, ROCK, HIP_HOP, COUNTRY, JAZZ, DISCO;
+        POP, ROCK, HIP_HOP, COUNTRY, JAZZ, DISCO
     }
     public void setDuration(int newDuration){
         this.duration = newDuration;
