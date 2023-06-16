@@ -66,7 +66,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
             counter++;
         }
 
-        return stringPlaylist += "(" + songList.get(counter) + ")" +  "]";
+        return stringPlaylist + "(" + songList.get(counter) + ")" +  "]";
 
     }
 
