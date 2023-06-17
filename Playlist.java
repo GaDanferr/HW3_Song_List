@@ -10,9 +10,9 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
     private int songCount;
     private String filterArtist;
     private Song.Genre filterGenre;
-    private Optional<Integer> filterDuration;
+    private int filterDuration;
     private ScanningOrder currentOrder;
-
+    static final int UNLIMITED = (1<<31)-1;
     /**
      * Initializes a new Playlist object.
      */
@@ -21,7 +21,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
         this.songList = new ArrayList<>();
         this.orderedList = new ArrayList<>();
         this.currentOrder = ScanningOrder.ADDING;
-        filterDuration = Optional.empty();
+        filterDuration = UNLIMITED;
     }
 
     /**
@@ -29,7 +29,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
      * @param song is the song that is being located
      * @return an Optional that houses the location of the song in the playlist, empty if it doesn't exist.
      */
-    private Optional<Integer> songLocation(Song song){//,ArrayList<Song> list) {
+    private Optional<Integer> songLocation(Song song){
         PlaylistIterator iterator = new PlaylistIterator();
         Song currentSong;
         int i = 0;
@@ -42,6 +42,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
         }
         return Optional.empty();
     }
+
 
     /**
      * Adds a new song to the playlist if it's not already in the playlist
@@ -57,15 +58,12 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
         }
         else{
             songList.add(newSong);
-            addOrderedSong(newSong);
+            orderedList.add(newSong);
 
         }
         songCount++;
     }
-    private void addOrderedSong(Song newSong){
-        orderedList.add(newSong);
 
-    }
 
     /**
      * Removes a song from the playlist
@@ -77,6 +75,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
         if(location.isPresent()){
             int i = location.get();
             songList.remove(i);
+            orderedList.remove(removedSong);
             songCount--;
             return true;
         }
@@ -132,7 +131,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
      */
     @Override
     public void filterDuration(int durationLimit) {
-        this.filterDuration = Optional.of(durationLimit);
+        this.filterDuration = durationLimit;
     }
 
     /**
@@ -140,41 +139,45 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
      * Used exclusively when a cloning is performed.
      */
     public void deletePlaylist(){
-        songCount = 0;
         songList = new ArrayList<>();
         orderedList = new ArrayList<>();
     }
+    private ArrayList<Song> getOrderedList(){
+        return orderedList;
+    }
+    private ArrayList<Song> getSongList(){
+        return songList;
+    }
+
 
     /**
      * Shuffles the playlist based on the currentOrder mode:
      * ADDING : shuffles based on first songs that were added being shown first.
      * NAME: Shuffles based on the lexicographic order of the song name , if the song names are
      * equal a second, comparison between the artist's name is being performed.
-     * Duration : Shuffles the playlist to show the shortest songs first , if the songs are of equal length
+     * Duration : Shuffles the playlist to show the shortest songs first , if the songs are of equal duration
      * a second evaluation is used based on the same logic as the NAME shuffle.
      */
     private void sortPlaylist(){
         switch (currentOrder){
             case ADDING:
-                this.deletePlaylist();
+                songList = new ArrayList<>();
                 for(int i = 0 ; i < songCount ; i++){
                     songList.add(orderedList.get(i));
                 }
                 break;
             case NAME:
-                /*Comparator<Song> comparator = new Comparator<Song>() {
-                    @Override
-                    public int compare(Song o1, Song o2) {
-                        //if(o1.getName() > o2.getName())
-                        return 0;
-                    }
-                }*/
-
-
+                Comparator<Song> nameComparator = Comparator.comparing(Song::getName).thenComparing(Song::getArtist);
+                songList.sort(nameComparator);
+                break;
             case DURATION:
+                Comparator<Song> durationComparator = Comparator.comparing(Song::getDuration).thenComparing
+                        (Song::getName).thenComparing(Song::getArtist);
+                songList.sort(durationComparator);
+                break;
         }
 
-    };
+    }
 
     /**
      * Sets the shuffle mode the user wishes the playlist to be shuffled by.
@@ -197,11 +200,15 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
         try {
             Playlist newPlayList = (Playlist) super.clone();
             newPlayList.deletePlaylist();
-            PlaylistIterator iterator = new PlaylistIterator();
-            while (iterator.hasNext()) {
-                Song clonedSong = iterator.next().clone();
-                newPlayList.addSong(clonedSong);
-                newPlayList.addOrderedSong(clonedSong);
+            ArrayList<Song> newOrderedList = newPlayList.getOrderedList();
+            ArrayList<Song> newSongList = newPlayList.getSongList();
+
+            for(Song song: songList){
+                newSongList.add(song.clone());
+            }
+
+            for(Song song: orderedList){
+                newOrderedList.add(song.clone());
             }
             return newPlayList;
         } catch (CloneNotSupportedException e) {
@@ -281,6 +288,7 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
             this.currentSongIndex = 0;
         }
 
+
         /**
          * Checks whether there is a new song in the playlist based on the filters the playlist has.
          *
@@ -302,11 +310,9 @@ public class Playlist implements Cloneable,OrderedSongIterable,FilteredSongItera
                         continue;
                     }
                 }
-                if(filterDuration.isPresent()){
-                    if(currentSong.getDuration() > filterDuration.get() ){
-                        currentSongIndex++;
-                        continue;
-                    }
+                if(currentSong.getDuration() > filterDuration){
+                    currentSongIndex++;
+                    continue;
                 }
 
                 return true;
